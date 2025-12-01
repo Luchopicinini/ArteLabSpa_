@@ -10,8 +10,13 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val sessionManager =
-        UserSessionManager(application.applicationContext)
+    // Constructor principal: usa UserSessionManager real
+    private var sessionManager: UserSessionManager = UserSessionManager(application.applicationContext)
+
+    // Constructor secundario: inyecta un UserSessionManager fake o mock (para pruebas unitarias)
+    constructor(sessionManager: UserSessionManager, app: Application) : this(app) {
+        this.sessionManager = sessionManager
+    }
 
     private val _email = MutableStateFlow("")
     val email = _email.asStateFlow()
@@ -34,30 +39,23 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         val emailValue = _email.value.trim()
         val passwordValue = _password.value
 
-        // Regex para validar email
         val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.(com|cl)$")
 
         when {
-
-            emailValue.isEmpty() || passwordValue.isEmpty() -> {
+            emailValue.isEmpty() || passwordValue.isEmpty() ->
                 _errorMessage.value = "Completa todos los campos"
-            }
 
-            !emailRegex.matches(emailValue) -> {
+            !emailRegex.matches(emailValue) ->
                 _errorMessage.value = "Ingresa un correo válido terminado en .com o .cl"
-            }
 
-            passwordValue.length < 8 -> {
+            passwordValue.length < 8 ->
                 _errorMessage.value = "La contraseña debe tener al menos 8 caracteres"
-            }
 
-            !passwordValue.any { it.isUpperCase() } -> {
+            !passwordValue.any { it.isUpperCase() } ->
                 _errorMessage.value = "La contraseña debe incluir al menos 1 letra mayúscula"
-            }
 
-            !passwordValue.any { it.isDigit() } -> {
+            !passwordValue.any { it.isDigit() } ->
                 _errorMessage.value = "La contraseña debe incluir al menos 1 número"
-            }
 
             else -> {
                 _errorMessage.value = ""

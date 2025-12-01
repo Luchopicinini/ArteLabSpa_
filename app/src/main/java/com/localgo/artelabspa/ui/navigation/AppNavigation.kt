@@ -38,15 +38,22 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
 
             HomeScreen(
                 viewModel = homeViewModel,
-                onProfileClick = {
-                    navController.navigate("profile")
+                onProfileClick = { navController.navigate("profile") },
+                onLogoutClick = {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true } // elimina Home del backstack
+                    }
                 }
             )
         }
 
         // PROFILE
         composable("profile") {
-            ProfileScreen()
+            ProfileScreen(
+                onBackClick = {
+                    navController.popBackStack() // vuelve al HomeScreen
+                }
+            )
         }
     }
 }

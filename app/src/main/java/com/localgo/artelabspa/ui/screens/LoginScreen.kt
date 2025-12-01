@@ -29,100 +29,82 @@ fun LoginScreen(
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-
-    // Variable local para mostrar o esconder la contraseña
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // estructura principal de la pantalla: una columna centrada
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Título de la app
+        // Título principal
         Text(
-            text = "Artelab SPA",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 8.dp),
-            color = MaterialTheme.colorScheme.primary,
+            text = "Bienvenido al Arte",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 4.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Artelab SPA",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
 
-
-        // Campo de texto para el correo
+        // Input de correo
         TextField(
             value = email,
-
             onValueChange = viewModel::onEmailChanged,
             label = { Text("Correo electrónico") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Campo de texto para la contraseña con "ojito"
+        // Input de contraseña
         TextField(
             value = password,
             onValueChange = viewModel::onPasswordChanged,
             label = { Text("Contraseña") },
             singleLine = true,
-
-            visualTransformation = if (passwordVisible)
-                VisualTransformation.None
-            else
-                PasswordVisualTransformation(),
-            // Icono al final del campo para alternar visibilidad
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.Visibility
-                else
-                    Icons.Filled.VisibilityOff
-
-                // Botón que cambia el estado de visibilidad al presionarlo
+                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(imageVector = image, contentDescription = null)
                 }
             },
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Boton para iniciar sesión
+        // Botón Sign In
         Button(
             onClick = { viewModel.login(onLoginSuccess) },
             modifier = Modifier
-                .padding(top = 8.dp)
-                .fillMaxWidth(0.6f)
+                .fillMaxWidth()
+                .height(50.dp)
         ) {
-            Text("Sign in")
+            Text("Iniciar sesión")
         }
 
+        Spacer(modifier = Modifier.height(12.dp))
 
-// Boton simulador para registro
+        // Botón Registro
         Button(
-            onClick = {  },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Red
-            ),
+            onClick = { /* acción de registro */ },
             modifier = Modifier
-                .padding(top = 8.dp)
-                .width(100.dp)     // Ancho del botón
-                .height(45.dp) // Altura del botón
+                .fillMaxWidth()
+                .height(50.dp)
         ) {
-            Text(
-                text = "Registro",
-                color = Color.White // Color del texto del boton blanco
-            )
+            Text("Registrarse")
         }
 
-
+        // Mensaje de error
         if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = errorMessage,
                 color = MaterialTheme.colorScheme.error

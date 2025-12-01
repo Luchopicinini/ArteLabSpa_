@@ -1,5 +1,13 @@
 package com.localgo.artelabspa.ui.screens
 
+
+import androidx.compose.runtime.*
+import androidx.compose.material3.*
+import com.localgo.artelabspa.data.repository.AvatarRepository
+import com.localgo.artelabspa.data.local.UserSessionManager
+
+import coil.compose.AsyncImage
+
 import android.Manifest
 import android.content.Context
 import android.net.Uri
@@ -31,12 +39,24 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.localgo.artelabspa.viewmodel.ProfileViewModel
 
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ProfileScreen(onBackClick: () -> Unit = {}) {
 
     val context = LocalContext.current
-    val viewModel: ProfileViewModel = viewModel()
+
+    // Inicializamos los repositorios con lo que ya existe en tu app
+    val avatarRepository = AvatarRepository(context)
+    val sessionManager = UserSessionManager(context)
+
+    // Inicializamos el ViewModel manualmente con parámetros
+    val viewModel = ProfileViewModel(
+        application = context.applicationContext as android.app.Application,
+        avatarRepository = avatarRepository,
+        sessionManager = sessionManager
+    )
+
     val uiState by viewModel.uiState.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
