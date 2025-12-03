@@ -1,102 +1,71 @@
 package com.localgo.artelabspa.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.localgo.artelabspa.data.local.SessionManager
 import com.localgo.artelabspa.viewmodel.HomeViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel,
-    onProfileClick: () -> Unit,
-    onLogoutClick: () -> Unit // <-- cerrar sesión
+    onLogout: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
-    val productos by viewModel.filteredProducts.collectAsState(emptyList())
-    var searchText by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    val context = LocalContext.current
 
-        // Botones perfil y cerrar sesión en fila
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+    // ✅ Correcto: usar SessionManager
+    val sessionManager = remember { SessionManager(context) }
+
+    // ✅ ViewModel creado con SessionManager
+    val viewModel = remember { HomeViewModel(sessionManager) }
+
+    val email by viewModel.userEmail.collectAsState()
+    val role by viewModel.userRole.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        Text("Bienvenido", style = MaterialTheme.typography.titleLarge)
+        Text("Email: $email")
+        Text("Rol: $role")
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 🔵 Ir al perfil
+        Button(
+            onClick = onProfileClick,
+            modifier = Modifier.fillMaxWidth(0.8f)
         ) {
-            Button(onClick = onProfileClick) {
-                Text("Perfil")
-            }
-
-            Button(onClick = onLogoutClick) {
-                Text("Cerrar sesión")
-            }
+            Text("Ir al Perfil")
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Buscar por nombre
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = {
-                searchText = it
-                viewModel.setSearchQuery(it)
-            },
-            label = { Text("Buscar cuadro") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        // Filtrar por categoría
-        OutlinedTextField(
-            value = selectedCategory ?: "",
-            onValueChange = {
-                selectedCategory = if (it.isEmpty()) null else it
-                viewModel.setCategory(selectedCategory)
-            },
-            label = { Text("Filtrar por categoría") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        //  Grid de cuadros de arte
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(8.dp)
-        ) {
-            items(productos) { producto ->
-                Card(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        AsyncImage(
-                            model = producto.image,
-                            contentDescription = producto.title,
-                            modifier = Modifier
-                                .size(120.dp)
-                                .fillMaxWidth(),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(producto.title, style = MaterialTheme.typography.bodyLarge)
-                        Text(producto.category, style = MaterialTheme.typography.bodySmall)
-                    }
+        // 🔴 Cerrar sesión
+        Button(
+            onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    viewModel.logout()
                 }
-            }
+                onLogout()
+            },
+            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
+            modifier = Modifier.fillMaxWidth(0.8f)
+        ) {
+            Text("Cerrar sesión")
         }
     }
 }

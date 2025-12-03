@@ -1,43 +1,49 @@
 package com.localgo.artelabspa.data.local
 
-import android.content.Context//contexto
-import androidx.datastore.preferences.core.edit //editar y guardar valores
-import androidx.datastore.preferences.core.stringPreferencesKey //crea una llave que crea el nombre con la que guardara y leera un String en los datos
-import androidx.datastore.preferences.preferencesDataStore //delegante para crear y obtener pregerencias
-import kotlinx.coroutines.flow.first//para ller una vez
-import kotlinx.coroutines.flow.map//transformar valores emitidos por un Flow
+import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
-//Basicamente lo que hace SessionManager es guardar y recuperar el token JWT de forma segura
+class UserSessionManager(private val context: Context) {
 
-class SessionManager(private val context: Context) { //el atributo usa los elementos del sistema android
+    companion object {
+        private val Context.dataStore by preferencesDataStore(name = "user_session")
 
-    companion object { //objeto compartido
-        private val Context.dataStore by preferencesDataStore(name = "session_prefs") //crea y devuelve preferencias a la bd
-        private val KEY_AUTH_TOKEN = stringPreferencesKey("auth_token")//guardar/leer token de autenticación
+        private val KEY_TOKEN = stringPreferencesKey("auth_token")
+        private val KEY_USER_ID = stringPreferencesKey("user_id")
+        private val KEY_EMAIL = stringPreferencesKey("email")
+        private val KEY_ROLE = stringPreferencesKey("role")
     }
 
-
-    // Esta funcion sirve para guardad el token de autenticacion del usuario, por ej:
-    //el que se obtiene al iniciar sesion
-    suspend fun saveAuthToken(token: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_AUTH_TOKEN] = token
+    // Guardar token
+    suspend fun saveToken(token: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_TOKEN] = token
         }
     }
 
-    // Esta funcion recupera el token guardado
-    suspend fun getAuthToken(): String? {
-        return context.dataStore.data
-            .map { preferences -> preferences[KEY_AUTH_TOKEN] }
-            .first()
+    suspend fun getToken(): String? {
+        return context.dataStore.data.map { it[KEY_TOKEN] }.first()
     }
 
-    //Elimina el token
-    suspend fun clearAuthToken() {
-        context.dataStore.edit { preferences ->
-            preferences.remove(KEY_AUTH_TOKEN)
+    // Guardar datos del user
+    suspend fun saveUserData(id: String, email: String, role: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_USER_ID] = id
+            prefs[KEY_EMAIL] = email
+            prefs[KEY_ROLE] = role
         }
+    }
 
+    suspend fun getUserId(): String? = context.dataStore.data.map { it[KEY_USER_ID] }.first()
+    suspend fun getUserEmail(): String? = context.dataStore.data.map { it[KEY_EMAIL] }.first()
+    suspend fun getUserRole(): String? = context.dataStore.data.map { it[KEY_ROLE] }.first()
 
+    // Logout → borrar todo
+    suspend fun clearSession() {
+        context.dataStore.edit { it.clear() }
     }
 }

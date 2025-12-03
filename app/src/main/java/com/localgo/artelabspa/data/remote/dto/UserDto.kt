@@ -1,24 +1,9 @@
 package com.localgo.artelabspa.data.remote.dto
 
-import com.google.gson.annotations.SerializedName
-
-
 data class UserDto(
-    @SerializedName("id")
-    val id: Int,
-
-    @SerializedName("username")
-    val username: String,
-
-    @SerializedName("email")
+    val _id: String,
     val email: String,
-
-    @SerializedName("firstName")
-    val firstName: String,
-
-    @SerializedName("lastName")
-    val lastName: String,
-
-    @SerializedName("image")
-    val image: String? = null
+    val role: String,   // ← FALTABA ESTO
+    val isActive: Boolean? = null,
+    val emailVerified: Boolean? = null,
 )

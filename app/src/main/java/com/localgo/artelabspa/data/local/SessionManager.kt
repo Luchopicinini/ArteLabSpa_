@@ -1,36 +1,42 @@
 package com.localgo.artelabspa.data.local
 
-import android.content.Context//añade contexto
-import androidx.datastore.preferences.core.edit // editar y guardar valores
-import androidx.datastore.preferences.core.stringPreferencesKey// crea una llave que crea el nombre con la que guardará y leera un String en los datos
-import androidx.datastore.preferences.preferencesDataStore//delegante para crear y obtener pregerencias
-import kotlinx.coroutines.flow.Flow// flujo asincrono/reactivo de datos
-import kotlinx.coroutines.flow.map//transformar valores emitidos por un Flow
+import android.content.Context
 
-private val Context.userSessionDataStore by preferencesDataStore("user_session")//crea preferencias para datos
+class SessionManager(context: Context) {
 
-class UserSessionManager(private val context: Context) {//se crea user sesion manager y el atributo context accede al sistema android
+    private val prefs = context.getSharedPreferences("artelab_prefs", Context.MODE_PRIVATE)
 
-    companion object {//objeto compartido de user session manager
-    private val KEY_USER_EMAIL = stringPreferencesKey("user_email")
+    companion object {
+        private const val KEY_TOKEN = "key_token"
+        private const val KEY_EMAIL = "key_email"
+        private const val KEY_NAME = "key_name"
+        private const val KEY_AVATAR = "key_avatar"
+        private const val KEY_USER_ID = "key_user_id"
+        private const val KEY_ROLE = "key_role"
     }
 
-    // Guarda el correo electrónico del usuario
-    suspend fun saveUserEmail(email: String) {
-        context.userSessionDataStore.edit { prefs ->
-            prefs[KEY_USER_EMAIL] = email
-        }
+    fun saveToken(token: String) = prefs.edit().putString(KEY_TOKEN, token).apply()
+    fun getToken(): String? = prefs.getString(KEY_TOKEN, null)
+
+    fun saveEmail(email: String?) = prefs.edit().putString(KEY_EMAIL, email).apply()
+    fun getEmail(): String? = prefs.getString(KEY_EMAIL, null)
+
+    fun saveUserId(id: String?) = prefs.edit().putString(KEY_USER_ID, id).apply()
+    fun getUserId(): String? = prefs.getString(KEY_USER_ID, null)
+
+    fun saveRole(role: String?) = prefs.edit().putString(KEY_ROLE, role).apply()
+    fun getRole(): String? = prefs.getString(KEY_ROLE, null)
+
+    fun saveAvatar(url: String?) = prefs.edit().putString(KEY_AVATAR, url).apply()
+    fun getAvatar(): String? = prefs.getString(KEY_AVATAR, null)
+
+    fun saveUserInfo(name: String?, email: String?, avatarUrl: String?) {
+        prefs.edit()
+            .putString(KEY_NAME, name)
+            .putString(KEY_EMAIL, email)
+            .putString(KEY_AVATAR, avatarUrl)
+            .apply()
     }
 
-    // Lee el correo guardado
-    fun getUserEmail(): Flow<String?> {
-        return context.userSessionDataStore.data.map { prefs ->
-            prefs[KEY_USER_EMAIL]
-        }
-    }
-
-    // Limpia la sesión (para logout)
-    suspend fun clearSession() {
-        context.userSessionDataStore.edit { it.clear() }
-    }
+    fun logout() = prefs.edit().clear().apply()
 }

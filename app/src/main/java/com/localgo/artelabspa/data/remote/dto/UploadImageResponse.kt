@@ -1,7 +1,6 @@
 package com.localgo.artelabspa.data.remote.dto
 
-data class UserResponse(
+data class UploadImageResponse(
     val success: Boolean,
-    val message: String?,
-    val user: UserDto?
+    val url: String
 )

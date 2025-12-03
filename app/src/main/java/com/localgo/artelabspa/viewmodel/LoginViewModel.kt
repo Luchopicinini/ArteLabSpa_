@@ -1,68 +1,75 @@
 package com.localgo.artelabspa.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.localgo.artelabspa.data.repository.AuthRepository
 import com.localgo.artelabspa.data.local.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
-class LoginViewModel(application: Application) : AndroidViewModel(application) {
-
-    // Constructor principal: usa UserSessionManager real
-    private var sessionManager: UserSessionManager = UserSessionManager(application.applicationContext)
-
-    // Constructor secundario: inyecta un UserSessionManager fake o mock (para pruebas unitarias)
-    constructor(sessionManager: UserSessionManager, app: Application) : this(app) {
-        this.sessionManager = sessionManager
-    }
+import retrofit2.HttpException
+import java.io.IOException
+import com.localgo.artelabspa.data.local.SessionManager
+class LoginViewModel(
+    private val repository: AuthRepository,
+    private val sessionManager: SessionManager
+) : ViewModel() {
 
     private val _email = MutableStateFlow("")
-    val email = _email.asStateFlow()
+    val email: StateFlow<String> = _email
 
     private val _password = MutableStateFlow("")
-    val password = _password.asStateFlow()
+    val password: StateFlow<String> = _password
 
     private val _errorMessage = MutableStateFlow("")
-    val errorMessage = _errorMessage.asStateFlow()
+    val errorMessage: StateFlow<String> = _errorMessage
 
-    fun onEmailChanged(value: String) {
-        _email.value = value
+    fun onEmailChanged(newValue: String) {
+        _email.value = newValue
     }
 
-    fun onPasswordChanged(value: String) {
-        _password.value = value
+    fun onPasswordChanged(newValue: String) {
+        _password.value = newValue
     }
 
     fun login(onSuccess: () -> Unit) {
-        val emailValue = _email.value.trim()
-        val passwordValue = _password.value
+        viewModelScope.launch {
+            try {
+                val res = repository.login(
+                    email = email.value,
+                    password = password.value
+                )
 
-        val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.(com|cl)$")
+                if (res.success) {
+                    val user = res.data.user
+                    val token = res.data.access_token
 
-        when {
-            emailValue.isEmpty() || passwordValue.isEmpty() ->
-                _errorMessage.value = "Completa todos los campos"
+                    // 🔥 Guardamos token en local
+                    sessionManager.saveToken(token ?: "")
 
-            !emailRegex.matches(emailValue) ->
-                _errorMessage.value = "Ingresa un correo válido terminado en .com o .cl"
+                    // 🔥 Guardamos datos del usuario
+                    sessionManager.saveUserId(user._id ?: "")
+                    sessionManager.saveEmail(user.email ?: "")
+                    sessionManager.saveRole(user.role ?: "")
 
-            passwordValue.length < 8 ->
-                _errorMessage.value = "La contraseña debe tener al menos 8 caracteres"
+                    onSuccess()
 
-            !passwordValue.any { it.isUpperCase() } ->
-                _errorMessage.value = "La contraseña debe incluir al menos 1 letra mayúscula"
-
-            !passwordValue.any { it.isDigit() } ->
-                _errorMessage.value = "La contraseña debe incluir al menos 1 número"
-
-            else -> {
-                _errorMessage.value = ""
-                viewModelScope.launch {
-                    sessionManager.saveUserEmail(emailValue)
+                } else {
+                    _errorMessage.value = res.message
                 }
-                onSuccess()
+
+            } catch (e: HttpException) {
+                _errorMessage.value = when (e.code()) {
+                    401 -> "Correo o contraseña incorrectos"
+                    400 -> "Correo o contraseña incorrectos"
+                    else -> "Error del servidor (${e.code()})"
+                }
+
+            } catch (e: IOException) {
+                _errorMessage.value = "Sin conexión a Internet"
+
+            } catch (e: Exception) {
+                _errorMessage.value = "Error inesperado: ${e.message}"
             }
         }
     }

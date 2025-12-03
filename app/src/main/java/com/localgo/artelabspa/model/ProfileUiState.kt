@@ -1,10 +1,10 @@
 package com.localgo.artelabspa.model
 
-import android.net.Uri//importa el uri
-
-data class ProfileUiState(//estado ui del perfil
-    val isLoading: Boolean = true,
-    val userName: String = "",
+data class ProfileUiState(
     val userEmail: String = "",
-    val avatarUri: Uri? = null
+    val userName: String = "",
+    val avatarUrl: String? = null,
+    val isLoading: Boolean = true,
+    val isUploading: Boolean = false,
+    val error: String? = null
 )

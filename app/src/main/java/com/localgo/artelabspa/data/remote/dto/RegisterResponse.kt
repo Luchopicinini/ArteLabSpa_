@@ -1,7 +1,6 @@
 package com.localgo.artelabspa.data.remote.dto
 
-data class UserResponse(
+data class RegisterResponse(
     val success: Boolean,
-    val message: String?,
-    val user: UserDto?
+    val message: String
 )
