@@ -3,6 +3,10 @@
     <style name="Theme.ArteLab" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorOnPrimary">@android:color/white</item>
+
+        <!-- splash sencillo -->
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="android:windowSplashScreenBackground">@android:color/white</item>
     </style>
 
 </resources>

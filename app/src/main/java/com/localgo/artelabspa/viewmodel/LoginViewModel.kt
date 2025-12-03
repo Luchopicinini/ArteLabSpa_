@@ -66,7 +66,7 @@ class LoginViewModel(
                 }
 
             } catch (e: IOException) {
-                _errorMessage.value = "Sin conexión a Internet"
+                _errorMessage.value = "Email y/o contraseña invalidos"
 
             } catch (e: Exception) {
                 _errorMessage.value = "Error inesperado: ${e.message}"

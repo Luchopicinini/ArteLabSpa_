@@ -5,5 +5,5 @@ data class UpdateProfileRequest(
     val telefono: String? = null,
     val direccion: String? = null,
     val preferencias: List<String>? = null,
-    val avatarUrl: String? = null // ⭐ IMPORTANTE
+    val avatarUrl: String? = null
 )

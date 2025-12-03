@@ -1,13 +1,14 @@
 package com.localgo.artelabspa.ui.screens
 
 import android.app.Application
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,17 +26,13 @@ import com.localgo.artelabspa.data.repository.AvatarRepositoryBackend
 import com.localgo.artelabspa.viewmodel.ProfileViewModel
 import com.localgo.artelabspa.viewmodel.ProfileViewModelFactory
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    onBackClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {}
 ) {
-
 
     val context = LocalContext.current
 
-    // Crear instancia del ViewModel con Factory
     val viewModel: ProfileViewModel = viewModel(
         factory = ProfileViewModelFactory(
             application = context.applicationContext as Application,
@@ -50,82 +47,152 @@ fun ProfileScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    // Picker de imágenes
     val imagePickerLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            if (uri != null) {
-                viewModel.uploadAvatar(uri)
-            }
+            if (uri != null) viewModel.uploadAvatar(uri)
         }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Mi Perfil") })
-        }
-    ) { padding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // TÍTULO
+        Text(
+            text = "Mi Perfil",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        // ---------- AVATAR ----------
+        Box(
+            modifier = Modifier.size(140.dp),
+            contentAlignment = Alignment.BottomEnd
         ) {
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Avatar
             Box(
                 modifier = Modifier
                     .size(140.dp)
                     .clip(CircleShape)
-                    .background(Color.LightGray)
+                    .background(Color(0xFFE0E0E0))
                     .clickable { imagePickerLauncher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
+                when {
+                    uiState.isUploading -> {
+                        CircularProgressIndicator()
+                    }
 
-                if (uiState.isUploading) {
-                    CircularProgressIndicator()
-                } else {
-                    AsyncImage(
-                        model = uiState.avatarUrl,
-                        contentDescription = "Avatar",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    !uiState.avatarUrl.isNullOrEmpty() -> {
+                        AsyncImage(
+                            model = uiState.avatarUrl,
+                            contentDescription = "Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            text = uiState.userName.firstOrNull()?.uppercase() ?: "A",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = Color.DarkGray
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = uiState.userName,
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = uiState.userEmail,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            OutlinedButton(
-                onClick = { imagePickerLauncher.launch("image/*") }
+            Surface(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable { imagePickerLauncher.launch("image/*") },
+                color = MaterialTheme.colorScheme.primary,
+                shadowElevation = 6.dp
             ) {
-                Text("Cambiar avatar")
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = "Cambiar foto",
+                        tint = Color.White
+                    )
+                }
             }
+        }
 
-            if (uiState.error != null) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = uiState.error ?: "",
-                    color = Color.Red
-                )
-            }
+        Spacer(Modifier.height(12.dp))
+
+        Text(uiState.userName, style = MaterialTheme.typography.titleMedium)
+        Text(uiState.userEmail, color = Color.Gray)
+
+        Spacer(Modifier.height(24.dp))
+
+        // ---------- CAMPOS ----------
+        OutlinedTextField(
+            value = uiState.nombreEditable,
+            onValueChange = viewModel::onNombreChanged,
+            label = { Text("Nombre") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = uiState.userEmail,
+            onValueChange = {},
+            enabled = false,
+            label = { Text("Correo Electrónico") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = uiState.telefonoEditable,
+            onValueChange = viewModel::onTelefonoChanged,
+            label = { Text("Teléfono") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = uiState.direccionEditable,
+            onValueChange = viewModel::onDireccionChanged,
+            label = { Text("Dirección") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        Button(
+            onClick = { viewModel.saveProfileChanges() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text("Guardar Cambios")
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onLogoutClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color.Red
+            )
+        ) {
+            Text("Cerrar sesión")
+        }
+
+        if (uiState.error != null) {
+            Spacer(Modifier.height(12.dp))
+            Text(uiState.error!!, color = Color.Red)
         }
     }
 }

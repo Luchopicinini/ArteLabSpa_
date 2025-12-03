@@ -1,5 +1,6 @@
 package com.localgo.artelabspa.viewmodel
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.localgo.artelabspa.data.repository.AuthRepository
@@ -28,19 +29,40 @@ class RegisterViewModel(
     private val _successMessage = MutableStateFlow("")
     val successMessage: StateFlow<String> = _successMessage
 
+    // VALIDACIONES AUTOMÁTICAS
+    val isNameValid: Boolean
+        get() = name.value.length >= 3
+
+    val isEmailValid: Boolean
+        get() = Patterns.EMAIL_ADDRESS.matcher(email.value).matches()
+
+    val isPasswordValid: Boolean
+        get() = password.value.length >= 6
+
+    val isFormValid: Boolean
+        get() = isNameValid && isEmailValid && isPasswordValid
+
+    // ------------------------------
+
     fun onNameChanged(newValue: String) {
         _name.value = newValue
     }
 
     fun onEmailChanged(newValue: String) {
-        _email.value = newValue
+        _email.value = newValue.trim()
     }
+
 
     fun onPasswordChanged(newValue: String) {
         _password.value = newValue
     }
 
     fun register(onSuccess: () -> Unit) {
+        if (!isFormValid) {
+            _errorMessage.value = "Revisa los datos ingresados."
+            return
+        }
+
         viewModelScope.launch {
             try {
                 val res = repository.register(
@@ -48,9 +70,6 @@ class RegisterViewModel(
                     email = email.value,
                     password = password.value
                 )
-
-
-
 
                 if (res.success) {
                     _successMessage.value = "Registro exitoso"
@@ -60,12 +79,13 @@ class RegisterViewModel(
                 }
 
             } catch (e: HttpException) {
-                _errorMessage.value = "Error HTTP: ${e.code()}"
-            } catch (e: IOException) {
-                _errorMessage.value = "Sin conexión a Internet"
-            } catch (e: Exception) {
-                _errorMessage.value = "Error inesperado: ${e.message}"
+                when (e.code()) {
+                    409 -> _errorMessage.value = "Ese correo ya está registrado"
+                    400 -> _errorMessage.value = "Datos inválidos"
+                    else -> _errorMessage.value = "Error del servidor: ${e.code()}"
+                }
             }
+
         }
     }
 }

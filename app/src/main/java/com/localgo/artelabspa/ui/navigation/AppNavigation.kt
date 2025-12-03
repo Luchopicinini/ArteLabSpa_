@@ -5,10 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.localgo.artelabspa.ui.screens.HomeScreen
-import com.localgo.artelabspa.ui.screens.ProfileScreen
-import com.localgo.artelabspa.ui.screens.LoginScreen
-import com.localgo.artelabspa.ui.screens.RegisterScreen
+import com.localgo.artelabspa.ui.screens.*
 
 @Composable
 fun AppNavigation(navController: NavHostController = rememberNavController()) {
@@ -22,7 +19,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate("home") {
+                    navController.navigate("homeContainer") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
@@ -40,33 +37,17 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                         popUpTo("register") { inclusive = true }
                     }
                 },
-                onBackToLogin = {
-                    navController.popBackStack()
-                }
+                onBackToLogin = { navController.popBackStack() }
             )
         }
 
-        // HOME
-        composable("home") {
-            HomeScreen(
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                },
-                onProfileClick = {
-                    navController.navigate("profile")
+        // CONTENEDOR CON BOTTOM BAR
+        composable("homeContainer") {
+            HomeContainer(onLogout = {
+                navController.navigate("login") {
+                    popUpTo("homeContainer") { inclusive = true }
                 }
-            )
-        }
-
-        // PROFILE (FALTABA ESTO)
-        composable("profile") {
-            ProfileScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
+            })
         }
     }
 }

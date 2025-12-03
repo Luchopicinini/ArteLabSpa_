@@ -1,11 +1,21 @@
 package com.localgo.artelabspa.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.localgo.artelabspa.data.local.SessionManager
 import com.localgo.artelabspa.data.remote.RetrofitClient
@@ -20,10 +30,8 @@ fun RegisterScreen(
     val context = LocalContext.current
 
     val sessionManager = remember { SessionManager(context) }
-
     val api = remember { RetrofitClient.createApiService() }
     val authRepository = remember { AuthRepository(api, sessionManager) }
-
     val viewModel = remember { RegisterViewModel(authRepository) }
 
     val name by viewModel.name.collectAsState()
@@ -35,67 +43,124 @@ fun RegisterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp),
+            .background(Color(0xFFF8F8FC)) // Fondo suave
+            .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
 
-        Text("Crear cuenta", style = MaterialTheme.typography.headlineMedium)
-        Text("ArteLab SPA", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(80.dp))
 
-        Spacer(Modifier.height(24.dp))
-
-        TextField(
-            value = name,
-            onValueChange = viewModel::onNameChanged,
-            label = { Text("Nombre") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+        // TÍTULO
+        Text(
+            "Crear Cuenta",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF6C63FF) // Morado elegante
         )
 
-        Spacer(Modifier.height(12.dp))
+        Text(
+            "ArteLab SPA",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
 
-        TextField(
+        Spacer(Modifier.height(32.dp))
+
+        // CAMPO NOMBRE
+        OutlinedTextField(
+            value = name,
+            onValueChange = viewModel::onNameChanged,
+            label = { Text("Nombre completo") },
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+            singleLine = true,
+            isError = !viewModel.isNameValid && name.isNotEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp)),
+            shape = RoundedCornerShape(14.dp)
+        )
+        if (!viewModel.isNameValid && name.isNotEmpty()) {
+            Text("El nombre es muy corto", color = MaterialTheme.colorScheme.error)
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // CAMPO EMAIL
+        OutlinedTextField(
             value = email,
             onValueChange = viewModel::onEmailChanged,
             label = { Text("Correo electrónico") },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            isError = !viewModel.isEmailValid && email.isNotEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp)),
+            shape = RoundedCornerShape(14.dp)
         )
+        if (!viewModel.isEmailValid && email.isNotEmpty()) {
+            Text("Correo inválido", color = MaterialTheme.colorScheme.error)
+        }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(14.dp))
 
-        TextField(
+        // CAMPO CONTRASEÑA
+        OutlinedTextField(
             value = password,
             onValueChange = viewModel::onPasswordChanged,
-            label = { Text("Contraseña") },
+            label = { Text("Contraseña (mínimo 6 caracteres)") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            visualTransformation = PasswordVisualTransformation(),
+            isError = !viewModel.isPasswordValid && password.isNotEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp)),
+            shape = RoundedCornerShape(14.dp)
         )
+        if (!viewModel.isPasswordValid && password.isNotEmpty()) {
+            Text("La contraseña es muy corta", color = MaterialTheme.colorScheme.error)
+        }
 
         Spacer(Modifier.height(24.dp))
 
+        // BOTÓN REGISTRARSE
         Button(
             onClick = { viewModel.register(onRegisterSuccess) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            enabled = viewModel.isFormValid,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF6C63FF)
+            ),
+            shape = RoundedCornerShape(25.dp)
         ) {
-            Text("Registrarse")
+            Text("Registrarse", fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // BOTÓN VOLVER A LOGIN
+        TextButton(onClick = onBackToLogin) {
+            Text(
+                "Volver al inicio de sesión",
+                color = Color(0xFF3F3D56),
+                fontWeight = FontWeight.Medium
+            )
         }
 
         Spacer(Modifier.height(8.dp))
 
-        TextButton(onClick = onBackToLogin) {
-            Text("Volver al inicio de sesión")
-        }
-
+        // ERROR MENSAJE
         if (errorMessage.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
             Text(errorMessage, color = MaterialTheme.colorScheme.error)
         }
 
+        // SUCCESS MENSAJE
         if (successMessage.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text(successMessage, color = MaterialTheme.colorScheme.primary)
+            Text(successMessage, color = Color(0xFF6C63FF))
         }
     }
 }
