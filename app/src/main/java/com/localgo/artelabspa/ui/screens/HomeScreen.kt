@@ -5,12 +5,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+// --- CORRECCIÓN 1: Añadir el parámetro de navegación ---
 @Composable
-fun HomeScreen() {
-
+fun HomeScreen(
+    onNavigateToProducts: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -18,14 +20,14 @@ fun HomeScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
         Text("Bienvenido a ArteLab", style = MaterialTheme.typography.headlineMedium)
         Text("Explora arte y bienestar", color = MaterialTheme.colorScheme.primary)
 
         Spacer(Modifier.height(40.dp))
 
         Button(
-            onClick = { /* más adelante: ir a productos */ },
+            // --- CORRECCIÓN 2: Llamar a la función recibida ---
+            onClick = onNavigateToProducts,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -36,7 +38,8 @@ fun HomeScreen() {
         Spacer(Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { /* más adelante: ir a perfil */ },
+            // --- CORRECCIÓN 3 (opcional, pero buena práctica): Conectar el otro botón ---
+            onClick = onNavigateToProfile,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)

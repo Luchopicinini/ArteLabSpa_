@@ -28,8 +28,6 @@ class AuthRepository(
             )
         )
 
-
-
     // GUARDAR DATOS DEL USUARIO
     fun saveUserData(id: String?, email: String?, role: String?) {
         sessionManager.saveUserId(id)

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class HomeViewModel(
-    private val sessionManager: SessionManager   // ✅ AHORA EL TIPO CORRECTO
+    private val sessionManager: SessionManager   // AHORA EL TIPO CORRECTO
 ) : ViewModel() {
 
     private val _userEmail = MutableStateFlow(sessionManager.getEmail() ?: "Sin correo")

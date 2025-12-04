@@ -1,25 +1,22 @@
 package com.localgo.artelabspa.data.repository
 
+import com.localgo.artelabspa.data.remote.RetrofitClient
 import com.localgo.artelabspa.model.Producto
 
 class ProductosRepository {
-
-    fun getMockProductos(): List<Producto> {
-        return listOf(
-            Producto(
-                id = "1",
-                nombre = "Cuadro Acrílico Azul",
-                descripcion = "Obra en acrílico 60x80 cm",
-                precio = 45000,
-                imagen = "https://placehold.co/600x400"
-            ),
-            Producto(
-                id = "2",
-                nombre = "Escultura Minimalista",
-                descripcion = "Escultura moderna de 30cm",
-                precio = 55000,
-                imagen = "https://placehold.co/600x400"
-            )
-        )
+    /**
+     * Obtiene la lista de productos desde nuestra API de MockAPI.
+     * Es una función suspendida porque realiza una operación de red.
+     */
+    suspend fun getProductosFromApi(): List<Producto> {
+        return try {
+            // Llamamos a la instancia principal de Retrofit y al método que obtiene los productos.
+            RetrofitClient.instance.getProductos()
+        } catch (e: Exception) {
+            // En caso de un error de red (ej. sin conexión), imprimimos el error para depuración
+            // y devolvemos una lista vacía para que la app no se bloquee.
+            e.printStackTrace()
+            emptyList()
+        }
     }
 }

@@ -1,12 +1,17 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
 
-    <style name="Theme.ArteLab" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorOnPrimary">@android:color/white</item>
+    <!--
+    Tema base de la aplicación.
+    Cambiamos el "parent" a un tema del sistema que siempre existe para evitar errores de compilación.
+    El estilo real de la app se define en el código de Compose (ui/theme/Theme.kt).
+    -->
+    <style name="Theme.ArteLab" parent="android:Theme.Material.Light.NoActionBar">
 
-        <!-- splash sencillo -->
+        <!-- Mantenemos la configuración de la splash screen que ya tenías -->
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="android:windowSplashScreenBackground">@android:color/white</item>
+
     </style>
 
 </resources>

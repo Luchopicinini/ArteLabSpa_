@@ -1,14 +1,13 @@
 package com.localgo.artelabspa.viewmodel
 
-import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.localgo.artelabspa.data.repository.AuthRepository
+import com.localgo.artelabspa.utils.ValidationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import java.io.IOException
 
 class RegisterViewModel(
     private val repository: AuthRepository
@@ -34,7 +33,7 @@ class RegisterViewModel(
         get() = name.value.length >= 3
 
     val isEmailValid: Boolean
-        get() = Patterns.EMAIL_ADDRESS.matcher(email.value).matches()
+        get() = ValidationUtils.isValidEmail(email.value)
 
     val isPasswordValid: Boolean
         get() = password.value.length >= 6
@@ -51,7 +50,6 @@ class RegisterViewModel(
     fun onEmailChanged(newValue: String) {
         _email.value = newValue.trim()
     }
-
 
     fun onPasswordChanged(newValue: String) {
         _password.value = newValue
@@ -85,7 +83,6 @@ class RegisterViewModel(
                     else -> _errorMessage.value = "Error del servidor: ${e.code()}"
                 }
             }
-
         }
     }
 }

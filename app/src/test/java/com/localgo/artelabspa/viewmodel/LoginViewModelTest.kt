@@ -1,102 +1,190 @@
 package com.localgo.artelabspa.viewmodel
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.localgo.artelabspa.data.local.UserSessionManager
+import com.localgo.artelabspa.data.local.SessionManager
+import com.localgo.artelabspa.data.remote.dto.LoginData
+import com.localgo.artelabspa.data.remote.dto.LoginResponse
+import com.localgo.artelabspa.data.remote.dto.UserDto
+import com.localgo.artelabspa.data.repository.AuthRepository
+import com.localgo.artelabspa.utils.ValidationUtils
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
-import org.junit.Assert.assertEquals
+import okhttp3.ResponseBody
+import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.setMain
+import retrofit2.HttpException
+import retrofit2.Response
+import java.io.IOException
 
-
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
 
-    @get:Rule
-    val instantTaskExecutorRule = InstantTaskExecutorRule() // Para LiveData/StateFlow
-
-    private val testDispatcher = StandardTestDispatcher()
-
-    private lateinit var sessionManager: UserSessionManager
     private lateinit var viewModel: LoginViewModel
+    private lateinit var repository: AuthRepository
+    private lateinit var sessionManager: SessionManager
+
+    private val dispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(dispatcher)
+
+        repository = mockk()
         sessionManager = mockk(relaxed = true)
-        // Aquí usamos el constructor que recibe el UserSessionManager y Application
-        viewModel = LoginViewModel(sessionManager, mockk(relaxed = true))
+
+        viewModel = LoginViewModel(repository, sessionManager)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
 
+    //  TEST - Email inválido
+
     @Test
-    fun `login con campos vacíos devuelve error`() = runTest {
-        viewModel.onEmailChanged("")
+    fun loginfails_with_invalid_email() = runTest {
+        viewModel.onEmailChanged("correo-malo")
+        viewModel.onPasswordChanged("123456")
+
+        viewModel.login {}
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("El email no es válido", viewModel.errorMessage.value)
+    }
+
+
+    //  TEST — Password vacío
+
+    @Test
+    fun login_fails_with_empty_password() = runTest {
+        viewModel.onEmailChanged("test@gmail.com")
         viewModel.onPasswordChanged("")
-        var successCalled = false
-        viewModel.login { successCalled = true }
-        assertEquals("Completa todos los campos", viewModel.errorMessage.value)
-        assert(!successCalled)
+
+        viewModel.login {}
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("La contraseña no puede estar vacía", viewModel.errorMessage.value)
     }
+
+    // TEST — Login exitoso
 
     @Test
-    fun `login con email inválido devuelve error`() = runTest {
-        viewModel.onEmailChanged("email@mal")
-        viewModel.onPasswordChanged("Abcdef12")
-        var successCalled = false
-        viewModel.login { successCalled = true }
-        assertEquals("Ingresa un correo válido terminado en .com o .cl", viewModel.errorMessage.value)
-        assert(!successCalled)
+    fun successful_login_saves_user_and_token () = runTest {
+        val fakeUser = UserDto(
+            _id = "1",
+            email = "test@gmail.com",
+            role = "CLIENTE",
+            isActive = true,
+            emailVerified = true
+        )
+
+        val fakeResponse = LoginResponse(
+            success = true,
+            message = "ok",
+            data = LoginData(fakeUser, "TOKEN123")
+        )
+
+        coEvery { repository.login(any(), any()) } returns fakeResponse
+
+        viewModel.onEmailChanged("test@gmail.com")
+        viewModel.onPasswordChanged("123456")
+
+        var called = false
+
+        viewModel.login { called = true }
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(called)
+
+        coVerify { sessionManager.saveToken("TOKEN123") }
+        coVerify { sessionManager.saveUserId("1") }
+        coVerify { sessionManager.saveEmail("test@gmail.com") }
+        coVerify { sessionManager.saveRole("CLIENTE") }
     }
+
+    //  TEST — Backend responde success = false
 
     @Test
-    fun `login con contraseña corta devuelve error`() = runTest {
-        viewModel.onEmailChanged("test@domain.com")
-        viewModel.onPasswordChanged("Abc12")
-        var successCalled = false
-        viewModel.login { successCalled = true }
-        assertEquals("La contraseña debe tener al menos 8 caracteres", viewModel.errorMessage.value)
-        assert(!successCalled)
+    fun login_fails_when_backend_returns_error_message() = runTest {
+
+        val fakeResponse = LoginResponse(
+            success = false,
+            message = "Credenciales inválidas",
+            data = LoginData(
+                UserDto("0", "", "", false, false),
+                ""
+            )
+        )
+
+        coEvery { repository.login(any(), any()) } returns fakeResponse
+
+        viewModel.onEmailChanged("test@gmail.com")
+        viewModel.onPasswordChanged("123456")
+
+        viewModel.login {}
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("Credenciales inválidas", viewModel.errorMessage.value)
     }
+
+    // TEST — HttpException 401
 
     @Test
-    fun `login sin mayúscula devuelve error`() = runTest {
-        viewModel.onEmailChanged("test@domain.com")
-        viewModel.onPasswordChanged("abcdef12")
-        var successCalled = false
-        viewModel.login { successCalled = true }
-        assertEquals("La contraseña debe incluir al menos 1 letra mayúscula", viewModel.errorMessage.value)
-        assert(!successCalled)
+    fun login_http_401_returns_incorrect_credentials() = runTest {
+
+        val errorResponse = Response.error<Any>(
+            401,
+            ResponseBody.create(null, "")
+        )
+
+        coEvery { repository.login(any(), any()) } throws HttpException(errorResponse)
+
+        viewModel.onEmailChanged("test@gmail.com")
+        viewModel.onPasswordChanged("123456")
+
+        viewModel.login {}
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("Correo o contraseña incorrectos", viewModel.errorMessage.value)
     }
+
+    //  TEST — IOException (sin conexión)
 
     @Test
-    fun `login sin número devuelve error`() = runTest {
-        viewModel.onEmailChanged("test@domain.com")
-        viewModel.onPasswordChanged("Abcdefgh")
-        var successCalled = false
-        viewModel.login { successCalled = true }
-        assertEquals("La contraseña debe incluir al menos 1 número", viewModel.errorMessage.value)
-        assert(!successCalled)
+    fun login_IOException_returns_connection_error() = runTest {
+
+        coEvery { repository.login(any(), any()) } throws IOException()
+
+        viewModel.onEmailChanged("test@gmail.com")
+        viewModel.onPasswordChanged("123456")
+
+        viewModel.login {}
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("Problema de conexión", viewModel.errorMessage.value)
     }
+
+
+    //  TEST — Error inesperado
 
     @Test
-    fun `login correcto llama a onSuccess y guarda email`() = runTest {
-        viewModel.onEmailChanged("test@domain.com")
-        viewModel.onPasswordChanged("Abcdef12")
-        var successCalled = false
-        viewModel.login { successCalled = true }
+    fun login_unexpected_error() = runTest {
 
-        // Avanzamos corrutinas
-        testScheduler.advanceUntilIdle()
+        coEvery { repository.login(any(), any()) } throws RuntimeException("Falla rara")
 
-        assertEquals("", viewModel.errorMessage.value)
-        assert(successCalled)
-        coVerify { sessionManager.saveUserEmail("test@domain.com") }
+        viewModel.onEmailChanged("test@gmail.com")
+        viewModel.onPasswordChanged("123456")
+
+        viewModel.login {}
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("Error inesperado: Falla rara", viewModel.errorMessage.value)
     }
-
 }
