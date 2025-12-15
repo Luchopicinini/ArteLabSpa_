@@ -35,6 +35,7 @@ class ProfileViewModel(
         viewModelScope.launch(dispatcher) {
             val email = sessionManager.getEmail()
             val avatarUrl = sessionManager.getAvatar()
+            val role = sessionManager.getRole()
 
             val userName = email?.substringBefore("@")
                 ?.replaceFirstChar { it.uppercase() }
@@ -44,6 +45,7 @@ class ProfileViewModel(
                 it.copy(
                     userEmail = email ?: "Sin correo",
                     userName = userName,
+                    userRole = role ?: "invitado",
                     avatarUrl = avatarUrl,
 
                     // inicializamos campos editables

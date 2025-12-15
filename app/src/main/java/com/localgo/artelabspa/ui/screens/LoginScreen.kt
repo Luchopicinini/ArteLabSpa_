@@ -23,6 +23,7 @@ import com.localgo.artelabspa.data.local.SessionManager
 import com.localgo.artelabspa.data.remote.RetrofitClient
 import com.localgo.artelabspa.data.repository.AuthRepository
 import com.localgo.artelabspa.viewmodel.LoginViewModel
+import com.localgo.artelabspa.utils.ValidationUtils
 
 @Composable
 fun LoginScreen(
@@ -45,7 +46,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8FC)) // Fondo suave tipo app estética
+            .background(Color(0xFFF8F8FC))
             .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
@@ -58,7 +59,7 @@ fun LoginScreen(
             "ArteLab SPA",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF6C63FF) // Morado elegante
+            color = Color(0xFF6C63FF)
         )
 
         Text(
@@ -94,7 +95,8 @@ fun LoginScreen(
             visualTransformation =
                 if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                val icon =
+                    if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(icon, contentDescription = null)
                 }
@@ -107,7 +109,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // BOTÓN INICIAR SESIÓN
+        // BOTÓN LOGIN
         Button(
             onClick = { viewModel.login(onLoginSuccess) },
             modifier = Modifier
@@ -115,7 +117,7 @@ fun LoginScreen(
                 .height(52.dp),
             shape = RoundedCornerShape(25.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF6C63FF) // Morado principal
+                containerColor = Color(0xFF6C63FF)
             )
         ) {
             Text("Iniciar Sesión", fontWeight = FontWeight.SemiBold)
@@ -136,7 +138,24 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // MENSAJE ERROR
+        // ENTRAR COMO INVITADO
+        TextButton(
+            onClick = {
+                sessionManager.saveRole(ValidationUtils.ROLE_INVITADO)
+                sessionManager.saveToken("") // sin JWT
+                onLoginSuccess()
+            }
+        ) {
+            Text(
+                "Entrar como invitado",
+                color = Color(0xFF6C63FF),
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // ERROR
         if (errorMessage.isNotEmpty()) {
             Text(errorMessage, color = MaterialTheme.colorScheme.error)
         }

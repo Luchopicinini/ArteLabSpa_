@@ -12,26 +12,30 @@ class AuthRepository(
     private val sessionManager: SessionManager
 ) {
 
-    // LOGIN
     suspend fun login(email: String, password: String): LoginResponse {
         return api.login(LoginRequest(email, password))
     }
 
-    // REGISTER (CORRECTO)
-    suspend fun register(nombre: String, email: String, password: String) =
-        api.register(
+    suspend fun register(
+        nombre: String,
+        email: String,
+        password: String,
+        role: String
+    ): RegisterResponse {
+        return api.register(
             RegisterRequest(
                 email = email,
                 password = password,
-                role = "CLIENTE",
+                role = role,
                 nombre = nombre
             )
         )
+    }
 
-    // GUARDAR DATOS DEL USUARIO
     fun saveUserData(id: String?, email: String?, role: String?) {
         sessionManager.saveUserId(id)
         sessionManager.saveEmail(email)
         sessionManager.saveRole(role)
     }
 }
+

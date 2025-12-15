@@ -2,17 +2,26 @@ package com.localgo.artelabspa.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.localgo.artelabspa.viewmodel.WeatherViewModel
 
-// --- CORRECCIÓN 1: Añadir el parámetro de navegación ---
 @Composable
 fun HomeScreen(
     onNavigateToProducts: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
+    // 👉 ViewModel del clima
+    val weatherViewModel = remember { WeatherViewModel() }
+    val weather by weatherViewModel.weather.collectAsState()
+
+    // 👉 Cargar clima al entrar
+    LaunchedEffect(Unit) {
+        weatherViewModel.loadWeather("Santiago")
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -20,13 +29,49 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Bienvenido a ArteLab", style = MaterialTheme.typography.headlineMedium)
-        Text("Explora arte y bienestar", color = MaterialTheme.colorScheme.primary)
+
+        // ---------- BIENVENIDA ----------
+        Text(
+            text = "Bienvenido a ArteLab",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Text(
+            text = "Explora arte y bienestar",
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        // ---------- CLIMA ----------
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Clima actual 🌤️",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = if (weather.isNotEmpty()) weather else "Cargando clima...",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
 
         Spacer(Modifier.height(40.dp))
 
+        // ---------- BOTÓN PRODUCTOS ----------
         Button(
-            // --- CORRECCIÓN 2: Llamar a la función recibida ---
             onClick = onNavigateToProducts,
             modifier = Modifier
                 .fillMaxWidth()
@@ -37,8 +82,8 @@ fun HomeScreen(
 
         Spacer(Modifier.height(16.dp))
 
+        // ---------- BOTÓN PERFIL ----------
         OutlinedButton(
-            // --- CORRECCIÓN 3 (opcional, pero buena práctica): Conectar el otro botón ---
             onClick = onNavigateToProfile,
             modifier = Modifier
                 .fillMaxWidth()

@@ -10,6 +10,7 @@ import retrofit2.HttpException
 import java.io.IOException
 import com.localgo.artelabspa.data.local.SessionManager
 import com.localgo.artelabspa.utils.ValidationUtils
+import android.util.Patterns.EMAIL_ADDRESS
 
 /**/
 class LoginViewModel(

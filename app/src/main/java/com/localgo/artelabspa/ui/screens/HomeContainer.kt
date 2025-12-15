@@ -4,50 +4,64 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.localgo.artelabspa.data.local.SessionManager
+import com.localgo.artelabspa.data.model.UserRole
 import com.localgo.artelabspa.ui.navigation.BottomNavBar
-
-import com.localgo.artelabspa.ui.screens.HomeScreen
-import com.localgo.artelabspa.ui.screens.ProductsScreen
-import com.localgo.artelabspa.ui.screens.ProfileScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContainer(
     onLogout: () -> Unit
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
+    val role = remember {
+        UserRole.from(sessionManager.getRole())
+    }
+
     var selectedTab by remember { mutableStateOf(0) }
 
+    val tabs = remember(role) {
+        when (role) {
+            UserRole.INVITADO -> listOf("HOME", "PRODUCTOS")
+            UserRole.CLIENTE -> listOf("HOME", "PRODUCTOS", "PERFIL")
+            UserRole.VENDEDOR -> listOf("HOME", "PRODUCTOS", "PERFIL")
+            UserRole.ADMIN -> listOf("HOME", "PRODUCTOS", "PERFIL")
+        }
+    }
+
     Scaffold(
-        // La barra de navegación inferior
         bottomBar = {
             BottomNavBar(
+                tabs = tabs,
                 selectedTab = selectedTab,
-                onTabSelected = { newTab -> selectedTab = newTab },
+                onTabSelected = { selectedTab = it },
                 onLogout = onLogout
             )
         }
     ) { innerPadding ->
-
         Column(Modifier.padding(innerPadding)) {
+            when (tabs[selectedTab]) {
 
-            // 'when' actúa como un "switch" para mostrar la pantalla correcta
-            // según la pestaña seleccionada.
-            when (selectedTab) {
-                // Si la pestaña es 0, muestra HomeScreen
-                0 -> HomeScreen(
-                    // Le pasamos la acción para cambiar a la pestaña de Productos (1)
-                    onNavigateToProducts = { selectedTab = 1 },
-                    // Le pasamos la acción para cambiar a la pestaña de Perfil (2)
-                    onNavigateToProfile = { selectedTab = 2 }
+                "HOME" -> HomeScreen(
+                    onNavigateToProducts = {
+                        selectedTab = tabs.indexOf("PRODUCTOS")
+                    },
+                    onNavigateToProfile = {
+                        if (tabs.contains("PERFIL")) {
+                            selectedTab = tabs.indexOf("PERFIL")
+                        }
+                    }
                 )
-                // Si la pestaña es 1, muestra ProductsScreen
-                1 -> ProductsScreen()
 
-                // Si la pestaña es 2, muestra ProfileScreen
-                2 -> ProfileScreen(onLogoutClick = onLogout)
+                "PRODUCTOS" -> ProductsScreen()
+
+                "PERFIL" -> ProfileScreen(
+                    onLogoutClick = onLogout
+                )
             }
         }
     }
