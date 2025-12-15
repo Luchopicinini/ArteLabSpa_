@@ -53,6 +53,9 @@ android {
 
 dependencies {
 
+    implementation("com.google.android.gms:play-services-location:18.0.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
     // CORE
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")

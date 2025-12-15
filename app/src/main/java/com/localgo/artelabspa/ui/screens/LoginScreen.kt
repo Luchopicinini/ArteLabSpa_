@@ -1,5 +1,6 @@
 package com.localgo.artelabspa.ui.screens
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,121 +44,137 @@ fun LoginScreen(
 
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8F8FC))
-            .padding(horizontal = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+    // 🔹 Control animación
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + slideInVertically(
+            initialOffsetY = { it / 2 }
+        )
     ) {
-
-        Spacer(modifier = Modifier.height(90.dp))
-
-        // TÍTULO
-        Text(
-            "ArteLab SPA",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF6C63FF)
-        )
-
-        Text(
-            "Productos y servicios de arte y bienestar",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // EMAIL
-        OutlinedTextField(
-            value = email,
-            onValueChange = viewModel::onEmailChanged,
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-            label = { Text("Correo") },
-            singleLine = true,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp)),
-            shape = RoundedCornerShape(14.dp)
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // CONTRASEÑA
-        OutlinedTextField(
-            value = password,
-            onValueChange = viewModel::onPasswordChanged,
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            label = { Text("Contraseña") },
-            singleLine = true,
-            visualTransformation =
-                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                val icon =
-                    if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(icon, contentDescription = null)
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp)),
-            shape = RoundedCornerShape(14.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // BOTÓN LOGIN
-        Button(
-            onClick = { viewModel.login(onLoginSuccess) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF6C63FF)
-            )
+                .fillMaxSize()
+                .background(Color(0xFFF8F8FC))
+                .padding(horizontal = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
-            Text("Iniciar Sesión", fontWeight = FontWeight.SemiBold)
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(90.dp))
 
-        // REGISTRARSE
-        OutlinedButton(
-            onClick = onRegisterClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(25.dp)
-        ) {
-            Text("¿No tienes cuenta? Regístrate")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ENTRAR COMO INVITADO
-        TextButton(
-            onClick = {
-                sessionManager.saveRole(ValidationUtils.ROLE_INVITADO)
-                sessionManager.saveToken("") // sin JWT
-                onLoginSuccess()
-            }
-        ) {
+            // ---------- TÍTULO ----------
             Text(
-                "Entrar como invitado",
-                color = Color(0xFF6C63FF),
-                fontWeight = FontWeight.Medium
+                text = "ArteLab SPA",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF6C63FF)
             )
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "Productos y servicios de arte y bienestar",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
 
-        // ERROR
-        if (errorMessage.isNotEmpty()) {
-            Text(errorMessage, color = MaterialTheme.colorScheme.error)
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // ---------- EMAIL ----------
+            OutlinedTextField(
+                value = email,
+                onValueChange = viewModel::onEmailChanged,
+                leadingIcon = { Icon(Icons.Default.Email, null) },
+                label = { Text("Correo") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp)),
+                shape = RoundedCornerShape(14.dp)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // ---------- CONTRASEÑA ----------
+            OutlinedTextField(
+                value = password,
+                onValueChange = viewModel::onPasswordChanged,
+                leadingIcon = { Icon(Icons.Default.Lock, null) },
+                label = { Text("Contraseña") },
+                singleLine = true,
+                visualTransformation =
+                    if (passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon =
+                        if (passwordVisible) Icons.Default.Visibility
+                        else Icons.Default.VisibilityOff
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(icon, null)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp)),
+                shape = RoundedCornerShape(14.dp)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ---------- BOTÓN LOGIN ----------
+            Button(
+                onClick = { viewModel.login(onLoginSuccess) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(25.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6C63FF)
+                )
+            ) {
+                Text("Iniciar Sesión", fontWeight = FontWeight.SemiBold)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ---------- REGISTRO ----------
+            OutlinedButton(
+                onClick = onRegisterClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(25.dp)
+            ) {
+                Text("¿No tienes cuenta? Regístrate")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ---------- INVITADO ----------
+            TextButton(
+                onClick = {
+                    sessionManager.saveRole(ValidationUtils.ROLE_INVITADO)
+                    sessionManager.saveToken("")
+                    onLoginSuccess()
+                }
+            ) {
+                Text(
+                    text = "Entrar como invitado",
+                    color = Color(0xFF6C63FF),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ---------- ERROR ----------
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }
