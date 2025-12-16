@@ -1,5 +1,6 @@
  ArteLab SPA – Aplicación Móvil Android
 
+Luciano José Picinini - Jose Miguel Matte
 ArteLab SPA es una aplicación móvil desarrollada en **Kotlin + Jetpack Compose**, orientada a la gestión y visualización de productos y servicios de arte y bienestar.  
 
 
